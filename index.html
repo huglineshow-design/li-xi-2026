@@ -3,161 +3,186 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lì xì năm mới 🧧</title>
+  <title>Lì xì năm mới 🎉</title>
   <style>
     body {
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
+      background: radial-gradient(circle at top, #ffdf6c, #ff4d4d);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at top, #ffefba, #ff4d4d);
-      font-family: system-ui, Arial, sans-serif;
       overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    .card {
-      background: #fff7e6;
-      padding: 22px 18px 26px;
-      border-radius: 20px;
+
+    .container {
       text-align: center;
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-      max-width: 380px;
-      width: 92%;
-      border: 3px solid #ffd24d;
-      position: relative;
+      color: #fff;
       z-index: 2;
     }
-    h1 { color: #c62828; margin: 6px 0; font-size: 26px; }
-    .from { font-weight: 800; color: #b71c1c; margin-bottom: 6px; }
-    p { color: #4a2c2a; margin: 6px 0 12px; }
 
-    /* Phong bao */
-    .wrap { display: inline-block; cursor: pointer; margin: 8px 0 10px; perspective: 800px; }
-    .env {
-      width: 160px; height: 110px; background: #d32f2f; border-radius: 10px;
-      box-shadow: 0 8px 18px rgba(0,0,0,.25); position: relative; overflow: hidden;
+    h1 {
+      margin-bottom: 20px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
-    .flap {
-      position: absolute; top: 0; left: 0; width: 100%; height: 60%;
-      background: #b71c1c; clip-path: polygon(0 0, 100% 0, 50% 100%);
-      transform-origin: top; transition: transform .6s ease;
+
+    .envelope {
+      width: 220px;
+      height: 160px;
+      background: #c62828;
+      border-radius: 12px;
+      position: relative;
+      margin: 0 auto 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
     }
-    .open .flap { transform: rotateX(160deg); }
-    .seal {
-      position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%);
-      width: 34px; height: 34px; background: #ffd24d; border-radius: 50%;
-      display: grid; place-items: center; font-weight: 900; color: #b71c1c;
+
+    .envelope:hover {
+      transform: scale(1.05);
+    }
+
+    .lid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background: #b71c1c;
+      border-radius: 12px 12px 0 0;
+      transform-origin: top;
+      transition: transform 0.6s ease;
+    }
+
+    .envelope.open .lid {
+      transform: rotateX(160deg);
     }
 
     .money {
-      display: none; margin-top: 10px; font-size: 26px; font-weight: 900; color: #1b5e20;
-      animation: pop .6s ease;
-    }
-    .money.show { display: block; }
-
-    .btn {
-      margin-top: 8px; padding: 10px 14px; border-radius: 999px; border: none;
-      background: #ffd24d; color: #7a1a1a; font-weight: 800; cursor: pointer;
-      box-shadow: 0 6px 14px rgba(0,0,0,.2);
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+      display: none;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
-    @keyframes pop {
-      from { transform: scale(.6); opacity: .2; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    /* Pháo hoa */
-    .firework {
-      position: fixed; inset: 0; pointer-events: none; z-index: 1;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(255,255,255,.8), transparent 40%),
-        radial-gradient(circle at 80% 40%, rgba(255,255,255,.7), transparent 45%),
-        radial-gradient(circle at 50% 20%, rgba(255,255,255,.9), transparent 35%);
-      animation: fw 1.2s ease-in-out both;
+    .from {
+      margin-top: 8px;
+      font-size: 16px;
+      opacity: 0.9;
       display: none;
     }
-    .firework.show { display: block; }
-    @keyframes fw {
-      0% { opacity: 0; }
-      30% { opacity: 1; }
-      100% { opacity: 0; }
-    }
 
-    /* Ngựa chạy */
-    .horse {
-      position: fixed; bottom: 10%; left: -80px; font-size: 48px; z-index: 1;
-      animation: run 3s linear both;
-      display: none;
-    }
-    .horse.show { display: block; }
-    @keyframes run {
-      from { transform: translateX(0); }
-      to { transform: translateX(120vw); }
+    canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
-  <div class="firework" id="fw"></div>
-  <div class="horse" id="horse">🐎✨</div>
+  <canvas id="fireworks"></canvas>
 
-  <div class="card">
-    <h1>🧧 Lì xì năm mới</h1>
-    <div class="from">Người lì xì: Hùng đẹp trai</div>
-    <p>Chạm vào phong bao để mở lì xì nhé!</p>
+  <div class="container">
+    <h1>🎊 Nhận lì xì năm mới 🎊</h1>
 
-    <div class="wrap" id="wrap">
-      <div class="env" id="env">
-        <div class="flap"></div>
-        <div class="seal">福</div>
-      </div>
+    <div class="envelope" id="envelope">
+      <div class="lid"></div>
     </div>
 
     <div class="money" id="money"></div>
-    <button class="btn" id="again" style="display:none;">Mở lại lần nữa</button>
+    <div class="from" id="from"></div>
   </div>
 
   <script>
-    const wrap = document.getElementById('wrap');
-    const env = document.getElementById('env');
-    const moneyEl = document.getElementById('money');
-    const againBtn = document.getElementById('again');
-    const fw = document.getElementById('fw');
-    const horse = document.getElementById('horse');
+    // ====== CẤU HÌNH Ở ĐÂY ======
+    const TEN_NGUOI_LI_XI = "Hùng đẹp trai";
+    const CAC_MOC_TIEN = [
+      10000, 20000, 30000, 40000, 50000,
+      100000, 200000
+    ];
+    // ===========================
+
+    const envelope = document.getElementById("envelope");
+    const moneyEl = document.getElementById("money");
+    const fromEl = document.getElementById("from");
+
     let opened = false;
 
-    function randomRoundMoney() {
-      const steps = [];
-      for (let v = 10000; v <= 200000; v += 10000) steps.push(v); // 10k,20k,...200k
-      return steps[Math.floor(Math.random() * steps.length)];
-    }
-
-    function boomEffects() {
-      fw.classList.add('show');
-      horse.classList.add('show');
-      setTimeout(() => fw.classList.remove('show'), 1200);
-      setTimeout(() => horse.classList.remove('show'), 3000);
-    }
-
-    wrap.addEventListener('click', () => {
+    envelope.addEventListener("click", () => {
       if (opened) return;
       opened = true;
-      env.classList.add('open');
 
-      const amount = randomRoundMoney();
-      moneyEl.textContent = `🎉 Bạn nhận được: ${amount.toLocaleString('vi-VN')}đ`;
+      envelope.classList.add("open");
+
+      const randomMoney =
+        CAC_MOC_TIEN[Math.floor(Math.random() * CAC_MOC_TIEN.length)];
+
       setTimeout(() => {
-        moneyEl.classList.add('show');
-        againBtn.style.display = 'inline-block';
-        boomEffects();
-      }, 400);
+        moneyEl.style.display = "block";
+        fromEl.style.display = "block";
+        moneyEl.textContent = `💰 Bạn nhận được: ${randomMoney.toLocaleString()}đ`;
+        fromEl.textContent = `Người lì xì: ${TEN_NGUOI_LI_XI}`;
+        startFireworks();
+      }, 600);
     });
 
-    againBtn.addEventListener('click', () => {
-      opened = false;
-      env.classList.remove('open');
-      moneyEl.classList.remove('show');
-      againBtn.style.display = 'none';
-    });
+    // ====== PHÁO HOA ======
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    let particles = [];
+
+    function createFirework() {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height * 0.5;
+
+      const count = 50;
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 60,
+        });
+      }
+    }
+
+    function drawFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p, index) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fill();
+
+        if (p.life <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+
+      requestAnimationFrame(drawFireworks);
+    }
+
+    function startFireworks() {
+      setInterval(createFirework, 700);
+      drawFireworks();
+    }
   </script>
 </body>
 </html>

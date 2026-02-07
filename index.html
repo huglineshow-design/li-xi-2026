@@ -31,117 +31,145 @@
     .from { font-weight: 800; color: #b71c1c; margin-bottom: 6px; }
     p { color: #4a2c2a; margin: 6px 0 12px; }
 
-    .wrap { display: inline-block; cursor: pointer; margin: 8px 10px; perspective: 800px; }
+    /* Phong bao */
+    .wrap { display: inline-block; cursor: pointer; perspective: 800px; }
     .env {
       width: 160px; height: 110px;
-      background: #d32f2f; border-radius: 10px;
-      position: relative; overflow: hidden;
-      box-shadow: 0 10px 18px rgba(0,0,0,.25);
-      transform-style: preserve-3d;
-      transition: transform .6s ease;
+      background: #d32f2f;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,.25);
     }
     .flap {
       position: absolute; inset: 0;
-      background: #b71c1c;
+      background: linear-gradient(135deg, #ff6f60, #c62828);
       transform-origin: top;
-      transform: rotateX(0deg);
-      transition: transform .6s ease;
-      clip-path: polygon(0 0, 100% 0, 50% 60%);
+      transition: transform .7s cubic-bezier(.2,.8,.2,1);
+      clip-path: polygon(0 0, 100% 0, 50% 55%);
     }
-    .money {
-      position: absolute; inset: 0;
-      display: grid; place-items: center;
-      font-weight: 900; font-size: 28px; color: #2e7d32;
-      transform: translateY(40px) scale(.8);
-      opacity: 0;
-      transition: all .5s ease .2s;
-    }
-    .open .env { transform: rotateX(10deg); }
-    .open .flap { transform: rotateX(-160deg); }
-    .open .money { transform: translateY(0) scale(1); opacity: 1; }
+    .open .flap { transform: rotateX(180deg); }
 
-    canvas#fx {
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    .seal {
+      position: absolute; bottom: 10px; left: 50%;
+      transform: translateX(-50%);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #ffd24d;
+      color: #b71c1c; font-weight: 900;
+      display: grid; place-items: center;
     }
-    .hint { font-size: 12px; opacity: .8; }
+
+    .result {
+      margin-top: 14px;
+      font-size: 22px;
+      font-weight: 900;
+      color: #1b5e20;
+      min-height: 1.2em;
+    }
+
+    /* Pháo hoa (canvas phủ nền) */
+    canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+    /* Ngựa chạy */
+    .horse {
+      position: fixed; bottom: 12px; left: -120px;
+      font-size: 48px;
+      animation: run 8s linear infinite;
+      z-index: 2;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.3));
+    }
+    @keyframes run {
+      0% { left: -120px; }
+      100% { left: 110%; }
+    }
+
+    .hint { font-size: 13px; opacity: .8; }
   </style>
 </head>
 <body>
-  <canvas id="fx"></canvas>
+  <canvas id="fw"></canvas>
+
+  <div class="horse">🐎</div>
+
   <div class="card">
-    <h1>Chúc mừng năm mới! 🧨</h1>
+    <h1>Chúc mừng năm mới 🎉</h1>
     <div class="from">Từ: Hùng đẹp trai</div>
-    <p>Nhấn vào bao lì xì để mở nhé 👇</p>
+    <p>Nhấn vào phong bao để mở lì xì nha!</p>
 
     <div class="wrap" id="wrap">
       <div class="env" id="env">
         <div class="flap"></div>
-        <div class="money" id="money">0đ</div>
+        <div class="seal">福</div>
       </div>
     </div>
 
-    <div class="hint">Trên 100k chỉ có 10% cơ hội trúng 😆</div>
+    <div class="result" id="result"></div>
+    <div class="hint">Chúc bạn một năm mới phát tài phát lộc ✨</div>
   </div>
 
   <script>
-    // Các mốc tiền
-    const THAP = [10000,20000,30000,40000,50000,60000,70000,80000,90000,100000];
-    const CAO  = [200000];
+    // ---- Random tiền (10k–200k, số tròn) + giảm ẩn tỉ lệ >100k xuống ~50% ----
+    const MOC_TIEN = [10000,20000,30000,40000,50000,100000,200000];
 
-    // Random có trọng số: >100k chỉ 10%
     function randomTien() {
-      const roll = Math.random(); // 0 → 1
-      if (roll < 0.1) {
-        // 10% trúng tiền cao
-        return CAO[Math.floor(Math.random() * CAO.length)];
-      } else {
-        // 90% trúng tiền <= 100k
-        return THAP[Math.floor(Math.random() * THAP.length)];
+      // Tạo trọng số: mốc >100k bị giảm ẩn 50%
+      const weights = MOC_TIEN.map(v => v > 100000 ? 0.5 : 1);
+      const total = weights.reduce((a,b)=>a+b,0);
+      let r = Math.random() * total;
+      for (let i=0;i<MOC_TIEN.length;i++){
+        r -= weights[i];
+        if (r <= 0) return MOC_TIEN[i];
       }
+      return 10000;
     }
 
-    const moneyEl = document.getElementById('money');
     const wrap = document.getElementById('wrap');
     const env = document.getElementById('env');
+    const result = document.getElementById('result');
+    let opened = false;
 
-    const soTien = randomTien();
-    moneyEl.textContent = soTien.toLocaleString('vi-VN') + 'đ';
+    wrap.onclick = () => {
+      if (opened) return;
+      opened = true;
+      env.classList.add('open');
+      setTimeout(() => {
+        const tien = randomTien();
+        result.textContent = `Bạn nhận được ${ (tien/1000) }k 🎁`;
+        burst();
+      }, 650);
+    };
 
-    wrap.addEventListener('click', () => {
-      env.classList.toggle('open');
-    });
-
-    // PHÁO HOA LIÊN TỤC
-    const canvas = document.getElementById('fx');
-    const ctx = canvas.getContext('2d');
-    let W, H; 
-    function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+    // ---- Pháo hoa đơn giản bằng canvas ----
+    const c = document.getElementById('fw');
+    const ctx = c.getContext('2d');
+    function resize(){ c.width = innerWidth; c.height = innerHeight; }
     addEventListener('resize', resize); resize();
 
-    const sparks = [];
-    function firework(){
-      const x = Math.random()*W, y = Math.random()*H*0.6;
-      const n = 80;
-      for(let i=0;i<n;i++){
+    let particles = [];
+    function burst(){
+      const x = Math.random()*c.width;
+      const y = Math.random()*c.height*0.5;
+      for(let i=0;i<80;i++){
         const a = Math.random()*Math.PI*2;
-        const v = Math.random()*4+2;
-        sparks.push({x,y,vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:60});
+        const s = Math.random()*4+2;
+        particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:60+Math.random()*30});
       }
     }
-    setInterval(firework, 700);
+    // bắn liên tục nhẹ
+    setInterval(()=> burst(), 1200);
 
-    function tick(){
-      ctx.clearRect(0,0,W,H);
-      for(let i=sparks.length-1;i>=0;i--){
-        const s = sparks[i];
-        s.x += s.vx; s.y += s.vy; s.vy += .03; s.life--;
-        ctx.fillStyle = `hsla(${(s.life*6)%360},100%,60%,.9)`;
-        ctx.beginPath(); ctx.arc(s.x,s.y,2,0,Math.PI*2); ctx.fill();
-        if(s.life<=0) sparks.splice(i,1);
-      }
-      requestAnimationFrame(tick);
+    function loop(){
+      ctx.clearRect(0,0,c.width,c.height);
+      particles = particles.filter(p=>p.life>0);
+      particles.forEach(p=>{
+        p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life--;
+        ctx.fillStyle = `hsl(${(p.life*6)%360},100%,60%)`;
+        ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+      });
+      requestAnimationFrame(loop);
     }
-    tick();
+    loop();
   </script>
 </body>
 </html>

@@ -90,17 +90,20 @@
   </div>
 
   <script>
-    // ---- Cấu hình ----
     const openedKey = "li_xi_opened_2026";
     const amountKey = "li_xi_amount_2026";
 
-    // Random tiền số tròn + giảm ẩn >100k 50%
     function randomAmount() {
-      const low = [10000,20000,30000,50000,100000];
-      const high = [200000];
-      const pickHigh = Math.random() < 0.5; // 50% cho nhóm >100k (ẩn)
-      const pool = pickHigh ? high : low;
-      return pool[Math.floor(Math.random() * pool.length)];
+      const r = Math.random() * 100;
+
+      if (r < 0.1) return 200000;          // 0.1% trúng 200k
+      if (r < 10.1) return 100000;         // 10% trúng 100k
+      if (r < 70.1) {                     // 60% dưới 50k
+        const low = [10000, 20000, 30000, 40000];
+        return low[Math.floor(Math.random() * low.length)];
+      }
+      // 29.9% còn lại: 50k
+      return 50000;
     }
 
     const card = document.getElementById('card');
@@ -163,7 +166,7 @@
     }
     loop();
 
-    // ---- Khởi tạo: nếu đã mở trước đó thì hiện kết quả & khóa nút ----
+    // ---- Khởi tạo: nếu đã mở trước đó ----
     (function init(){
       const opened = localStorage.getItem(openedKey);
       if (opened) {

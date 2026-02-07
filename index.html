@@ -8,181 +8,169 @@
     body {
       margin: 0;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       background: radial-gradient(circle at top, #ffefd5, #ff3b3b);
       font-family: system-ui, Arial, sans-serif;
       overflow: hidden;
     }
     .card {
       background: #fff7e6;
-      padding: 24px 18px 28px;
-      border-radius: 20px;
+      padding: 22px 18px 26px;
+      border-radius: 18px;
       text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
       z-index: 2;
-      max-width: 320px;
-      width: 90%;
+      max-width: 340px;
+      width: 92%;
     }
-    h1 { margin: 0 0 8px; }
-    .sender { opacity: .8; margin-bottom: 12px; }
+    h1 { margin: 0 0 6px; }
+    .sender { opacity: .85; margin-bottom: 10px; }
+
+    /* Phong bao */
     .envelope {
-      width: 180px;
-      height: 120px;
-      margin: 18px auto;
+      width: 180px; height: 120px;
+      margin: 14px auto;
       position: relative;
       cursor: pointer;
-      perspective: 800px;
+      perspective: 900px;
+      user-select: none;
     }
     .env-body {
-      position: absolute;
-      inset: 0;
-      background: #d60000;
-      border-radius: 10px;
+      position: absolute; inset: 0;
+      background: #d60000; border-radius: 10px;
     }
     .env-flap {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: #ff4d4d;
-      clip-path: polygon(0 0, 100% 0, 50% 60%);
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #ff6f60, #c62828);
+      clip-path: polygon(0 0, 100% 0, 50% 58%);
       transform-origin: top;
-      transition: transform .8s ease;
+      transition: transform .7s cubic-bezier(.2,.8,.2,1);
     }
-    .opened .env-flap {
-      transform: rotateX(160deg);
-    }
-    button {
-      border: 0;
-      padding: 10px 16px;
-      border-radius: 999px;
+    .opened .env-flap { transform: rotateX(160deg); }
+
+    .btn {
+      border: 0; padding: 10px 16px; border-radius: 999px;
       background: linear-gradient(135deg,#ff7a18,#ffb347);
-      color: #7a1a00;
-      font-weight: 700;
-      cursor: pointer;
+      color: #7a1a00; font-weight: 800; cursor: pointer;
       box-shadow: 0 8px 20px rgba(0,0,0,.2);
     }
-    .result {
-      margin-top: 12px;
-      font-size: 20px;
-      font-weight: 800;
-      color: #c0392b;
-      display: none;
-    }
+    .btn[disabled] { opacity: .6; filter: grayscale(1); cursor: not-allowed; }
+
+    .result { margin-top: 10px; font-size: 20px; font-weight: 900; color: #1b5e20; min-height: 1.2em; }
 
     /* Pháo hoa */
-    .firework {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      animation: boom 1.2s ease-out forwards;
-      pointer-events: none;
-    }
-    @keyframes boom {
-      from { transform: scale(1); opacity: 1; }
-      to { transform: scale(15); opacity: 0; }
-    }
+    canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-    /* Ngựa chạy */
+    /* Ngựa */
     .horse {
-      position: absolute;
-      bottom: 10%;
-      left: -60px;
-      font-size: 48px;
-      animation: run 10s linear infinite;
-      z-index: 1;
+      position: fixed; bottom: 10px; left: -80px;
+      font-size: 46px; z-index: 2;
+      animation: run 9s linear infinite;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.35));
     }
-    @keyframes run {
-      from { left: -60px; }
-      to { left: 110%; }
-    }
+    @keyframes run { from{left:-80px} to{left:110%} }
   </style>
 </head>
 <body>
-
+  <canvas id="fw"></canvas>
   <div class="horse">🐎</div>
 
   <div class="card" id="card">
     <h1>Chúc mừng năm mới 🎉</h1>
     <div class="sender">Lì xì từ: <b>Hùng đẹp trai</b></div>
 
-    <div class="envelope" onclick="openEnvelope()">
+    <div class="envelope" id="envelope">
       <div class="env-body"></div>
       <div class="env-flap"></div>
     </div>
 
-    <button onclick="openEnvelope()">Mở phong bao 🧧</button>
+    <button class="btn" id="btnOpen">Mở phong bao 🧧</button>
     <div class="result" id="result"></div>
   </div>
 
   <script>
+    // ---- Cấu hình ----
     const openedKey = "li_xi_opened_2026";
     const amountKey = "li_xi_amount_2026";
 
+    // Random tiền số tròn + giảm ẩn >100k 50%
     function randomAmount() {
-      const low = [10000, 20000, 50000];
-      const high = [100000, 200000];
-
-      const pickHigh = Math.random() < 0.5; // 50% cho nhóm >100k
+      const low = [10000,20000,30000,50000,100000];
+      const high = [200000];
+      const pickHigh = Math.random() < 0.5; // 50% cho nhóm >100k (ẩn)
       const pool = pickHigh ? high : low;
-
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    function formatMoney(num) {
-      return Number(num).toLocaleString("vi-VN") + "đ";
-    }
+    const card = document.getElementById('card');
+    const env = document.getElementById('envelope');
+    const btn = document.getElementById('btnOpen');
+    const result = document.getElementById('result');
 
-    function openEnvelope() {
+    function formatMoney(n){ return Number(n).toLocaleString('vi-VN') + 'đ'; }
+
+    function openOnce() {
       const opened = localStorage.getItem(openedKey);
-      const card = document.getElementById("card");
-      const result = document.getElementById("result");
-
-      card.classList.add("opened");
+      card.classList.add('opened');
 
       if (opened) {
-        const savedAmount = localStorage.getItem(amountKey);
-        result.style.display = "block";
-        result.innerText = "Bạn đã mở rồi 😅\nSố tiền: " + formatMoney(savedAmount);
+        const saved = localStorage.getItem(amountKey);
+        result.textContent = "Bạn đã mở rồi 😅 Số tiền: " + formatMoney(saved);
+        btn.disabled = true;
         return;
       }
 
       const amount = randomAmount();
-      localStorage.setItem(openedKey, "true");
+      localStorage.setItem(openedKey, "1");
       localStorage.setItem(amountKey, amount);
 
-      result.style.display = "block";
-      result.innerText = "🎊 Bạn nhận được: " + formatMoney(amount);
-
-      launchFireworks();
+      result.textContent = "🎊 Bạn nhận được: " + formatMoney(amount);
+      btn.disabled = true;
+      burst();
     }
 
-    function launchFireworks() {
-      for (let i = 0; i < 20; i++) {
-        setTimeout(createFirework, i * 120);
+    btn.addEventListener('click', openOnce);
+    env.addEventListener('click', openOnce);
+
+    // ---- Pháo hoa canvas ----
+    const c = document.getElementById('fw');
+    const ctx = c.getContext('2d');
+    function resize(){ c.width = innerWidth; c.height = innerHeight; }
+    addEventListener('resize', resize); resize();
+
+    let parts = [];
+    function burst(){
+      const x = Math.random()*c.width, y = Math.random()*c.height*0.5;
+      for(let i=0;i<90;i++){
+        const a = Math.random()*Math.PI*2;
+        const s = Math.random()*4+2;
+        parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:60+Math.random()*20});
       }
     }
+    // bắn nền nhẹ
+    setInterval(burst, 1200);
 
-    function createFirework() {
-      const fw = document.createElement("div");
-      fw.className = "firework";
-      fw.style.left = Math.random() * window.innerWidth + "px";
-      fw.style.top = Math.random() * window.innerHeight * 0.5 + "px";
-      fw.style.background = `hsl(${Math.random()*360}, 90%, 60%)`;
-      document.body.appendChild(fw);
-      setTimeout(() => fw.remove(), 1200);
+    function loop(){
+      ctx.clearRect(0,0,c.width,c.height);
+      parts = parts.filter(p=>p.life>0);
+      for(const p of parts){
+        p.x+=p.vx; p.y+=p.vy; p.vy+=.03; p.life--;
+        ctx.fillStyle = `hsla(${(p.life*6)%360},100%,60%,.9)`;
+        ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+      }
+      requestAnimationFrame(loop);
     }
+    loop();
 
-    // Nếu đã mở trước đó thì hiển thị luôn
-    (function init() {
+    // ---- Khởi tạo: nếu đã mở trước đó thì hiện kết quả & khóa nút ----
+    (function init(){
       const opened = localStorage.getItem(openedKey);
       if (opened) {
-        const result = document.getElementById("result");
-        const savedAmount = localStorage.getItem(amountKey);
-        result.style.display = "block";
-        result.innerText = "Bạn đã mở rồi 😅\nSố tiền: " + formatMoney(savedAmount);
+        const saved = localStorage.getItem(amountKey);
+        card.classList.add('opened');
+        result.textContent = "Bạn đã mở rồi 😅 Số tiền: " + formatMoney(saved);
+        btn.disabled = true;
       }
     })();
   </script>

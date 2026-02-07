@@ -109,7 +109,7 @@
   </div>
 
   <script>
-    // ======= FIREWORKS =======
+    // ===== FIREWORKS =====
     const canvas = document.getElementById('fw');
     const ctx = canvas.getContext('2d');
     function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
@@ -143,7 +143,7 @@
     }
     tick();
 
-    // ======= RANDOM LÌ XÌ =======
+    // ===== RANDOM LÌ XÌ (5% > 50k, 95% < 50k) =====
     const btn = document.getElementById('btn');
     const env = document.getElementById('env');
     const result = document.getElementById('result');
@@ -151,10 +151,11 @@
     function randomMoney(){
       const r = Math.random() * 100; // 0..100
       if (r < 5) {
-        return 100000; // 5% trúng 100k
+        const high = [60000,70000,80000,90000,100000];
+        return high[Math.floor(Math.random() * high.length)];
       } else {
-        const options = [10000,20000,30000,40000,50000,60000,70000,80000,90000];
-        return options[Math.floor(Math.random() * options.length)];
+        const low = [10000,20000,30000,40000];
+        return low[Math.floor(Math.random() * low.length)];
       }
     }
 
